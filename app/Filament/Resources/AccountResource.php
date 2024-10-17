@@ -6,6 +6,7 @@ use App\Enums\AccLevel;
 use App\Filament\Resources\AccountResource\Pages;
 use App\Filament\Resources\AccountResource\RelationManagers;
 use App\Models\Account;
+use App\Models\KydeData;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -39,6 +40,7 @@ class AccountResource extends Resource
                      Radio::make('acc_level')
                          ->label('مستوي الحساب')
                          ->options(AccLevel::class)
+                         ->disabled(fn($operation): bool=>$operation=='edit')
                          ->live()
                          ->inline()
                          ->afterStateUpdated(function (Set $set,$state,Get $get){
@@ -51,31 +53,22 @@ class AccountResource extends Resource
                              $set('theFather', null);
                              $set('theSon', null);
 
-
-                             if ($state==1) {
-                                 $set('id',strval(Account::where('acc_level',1)->max('num')+1));
-                             }
-                             if ($state>1) {
-                                 $set('grand_id', '1');
-                             }
-                             if ($state>2) {
-                                 $set('father_id', '1-1');
-                             }
-
                          })
                          ->inlineLabel(false)
                          ->default(1),
                      Select::make('theGrand')
                          ->label('الحساب الرئيسي')
                          ->dehydrated(false)
-                         ->options(Account::where('acc_level',1)->pluck('name', 'id'))
+                         ->options(Account::where('acc_level',1)
+                             ->whereNotIn('id',KydeData::select('account_id')->get())
+                             ->pluck('name', 'id'))
                          ->preload()
                          ->searchable()
                          ->required()
                          ->live()
-                         ->visible(fn(Get $get): bool=> $get('acc_level')>1)
+                         ->visible(fn(Get $get,$operation): bool=> ($get('acc_level')>1 && $operation=='create'))
                          ->afterStateUpdated(function ($state,Set $set,Get $get): void {
-                         //    $set('grand_id',$state);
+                            $set('grand_id',$state);
                              if ($get('acc_level')==2) {
                                  $set('num',Account::where('grand_id',$state)->max('num') + 1);
                                  $set('id',strval($state).'-'.strval($get('num')));
@@ -89,6 +82,7 @@ class AccountResource extends Resource
                          ->options(function (Get $get){
                              $theGrand=Account::query()->where('acc_level',2)
                                  ->where('grand_id', $get('grand_id'))
+                                 ->whereNotIn('id',KydeData::select('account_id')->get())
                                  ->pluck('name', 'id');
                              if (! $theGrand) return Account::query()->where('acc_level',2)
                                  ->pluck('name', 'id');
@@ -98,10 +92,10 @@ class AccountResource extends Resource
                          ->searchable()
                          ->required()
                          ->live()
-                         ->visible(fn(Get $get): bool=> $get('acc_level')>2)
+                         ->visible(fn(Get $get,$operation): bool=> ($get('acc_level')>2 && $operation=='create'))
                          ->disabled(fn(Get $get): bool=> !$get('theGrand'))
                          ->afterStateUpdated(function ($state,Set $set,Get $get): void {
-                          //   $set('father_id',$state);
+                             $set('father_id',$state);
                              if ($get('acc_level')==3) {
                                  $set('num',Account::where('father_id',$state)->max('num') + 1);
                                  $set('id',strval($state).'-'.strval($get('num')));
@@ -115,6 +109,7 @@ class AccountResource extends Resource
                          ->options(function (Get $get){
                              $theFather=Account::query()->where('acc_level',3)
                                  ->where('father_id', $get('father_id'))
+                                 ->whereNotIn('id',KydeData::select('account_id')->get())
                                  ->pluck('name', 'id');
                              if (! $theFather) return Account::query()->where('acc_level',3)
                                  ->pluck('name', 'id');
@@ -124,7 +119,7 @@ class AccountResource extends Resource
                          ->searchable()
                          ->required()
                          ->live()
-                         ->visible(fn(Get $get): bool=> $get('acc_level')>3)
+                         ->visible(fn(Get $get,$operation): bool=> ($get('acc_level')>3 && $operation=='create'))
                          ->disabled(fn(Get $get): bool=> !$get('theFather'))
                          ->afterStateUpdated(function ($state,Set $set,Get $get): void {
                              $set('son_id',$state);
@@ -191,7 +186,57 @@ class AccountResource extends Resource
                 //
             ])
             ->actions([
-               //
+               Tables\Actions\EditAction::make()
+                ->iconButton(),
+
+            Tables\Actions\Action::make('del')
+                 ->icon('heroicon-o-trash')
+                 ->visible(function (Model $record){
+
+                     if (KydeData::where('account_id',$record->id)->exists()) {return false;}
+                     if ($record->has('Grands')) {
+                         foreach ($record->Grands as $grand) {
+                             if (KydeData::where('account_id',$grand->id)->exists()) {return false;}
+                         }
+                     }
+                     if ($record->has('Fathers')) {
+                         foreach ($record->Fathers as $father) {
+                             if (KydeData::where('account_id',$father->id)->exists()) {return false;}
+                         }
+                     }
+                     if ($record->has('Sons')) {
+                         foreach ($record->Sons as $son) {
+                             if (KydeData::where('account_id',$son->id)->exists()) {return false;}
+                         }
+                     }
+
+                     return true;
+                 })
+               ->iconButton()
+              ->color('danger')
+               ->requiresConfirmation()
+               ->modalHeading('الغاء الحساب')
+               ->action(function (Model $record) {
+
+                   if ($record->acc_level->value==3)
+                           Account::where('son_id',$record->id)->delete();
+
+                   if ($record->acc_level->value==2) {
+                           Account::where('father_id',$record->id)->where('acc_level',4)->delete();
+                           Account::where('father_id',$record->id)->where('acc_level',3)->delete();
+                       }
+                   if ($record->acc_level->value==1) {
+
+                           Account::where('grand_id',$record->id)->where('acc_level',4)->delete();
+
+                           Account::where('grand_id',$record->id)->where('acc_level',3)->delete();
+
+                           Account::where('grand_id',$record->id)->where('acc_level',2)->delete();
+                       }
+
+
+                   $record->delete();
+               }),
             ])
             ;
     }

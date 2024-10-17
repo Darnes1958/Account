@@ -35,6 +35,7 @@ class Account extends Model
         if ($this->acc_level->value==4) return  $this->Grand->name.' / '.$this->Father->name.' / '.$this->Son->name.' / '.$this->name;
 
     }
+
     public function Sons(){
         return $this->hasMany(self::class,'son_id');
     }
@@ -54,5 +55,7 @@ class Account extends Model
         return $this->belongsTo(self::class,'son_id');
     }
 
-
+   public function kyde_data(){
+        return $this->hasMany(KydeData::class);
+   }
 }

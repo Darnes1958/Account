@@ -37,6 +37,7 @@ class KydeResource extends Resource
     protected static ?string $model = Kyde::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationLabel='قيود يومية';
 
     public static function form(Form $form): Form
     {

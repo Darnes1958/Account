@@ -7,6 +7,7 @@ use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Database\Eloquent\Model;
 
 class KydeDataWidget extends BaseWidget
 {
@@ -15,6 +16,7 @@ class KydeDataWidget extends BaseWidget
         $this->kyde_id=$kyde_id;
     }
     public $kyde_id;
+    protected static ?string $heading='';
     public function table(Table $table): Table
     {
         return $table
@@ -36,10 +38,12 @@ class KydeDataWidget extends BaseWidget
                     ->sortable()
                     ->label('الاسم الكامل'),
                 TextColumn::make('mden')
+                    ->state(fn(Model $record) => $record->mden==0?null:$record->mden)
                     ->searchable()
                     ->sortable()
                     ->label('مدين'),
                 TextColumn::make('daen')
+                    ->state(fn(Model $record) => $record->daen==0?null:$record->daen)
                     ->searchable()
                     ->sortable()
                     ->label('دائن'),
