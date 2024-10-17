@@ -23,7 +23,7 @@ enum AccLevel: int implements HasLabel,HasColor
       self::رئيسي => 'success',
       self::فرعي => 'info',
       self::تحليلي => 'primary',
-      self::تحليلي_مساعد => 'info',
+      self::تحليلي_مساعد => 'Fuchsia',
     };
   }
 

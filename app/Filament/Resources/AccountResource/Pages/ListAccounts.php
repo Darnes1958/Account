@@ -9,11 +9,11 @@ use Filament\Resources\Pages\ListRecords;
 class ListAccounts extends ListRecords
 {
     protected static string $resource = AccountResource::class;
-
+    protected ?string $heading=' ';
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()->label('ادخال حساب جديد'),
         ];
     }
 }

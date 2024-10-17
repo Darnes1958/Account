@@ -17,6 +17,12 @@ class Account extends Model
 
         }
     }
+    protected $primaryKey = 'id';
+
+    public $incrementing = false;
+
+    // In Laravel 6.0+ make sure to also set $keyType
+    protected $keyType = 'string';
 
     protected $casts=[
         'acc_level'=>AccLevel::class,
@@ -26,6 +32,7 @@ class Account extends Model
         if ($this->acc_level->value==1) return $this->name;
         if ($this->acc_level->value==2) return  $this->Grand->name.' / '.$this->name;
         if ($this->acc_level->value==3) return  $this->Grand->name.' / '.$this->Father->name.' / '.$this->name;
+        if ($this->acc_level->value==4) return  $this->Grand->name.' / '.$this->Father->name.' / '.$this->Son->name.' / '.$this->name;
 
     }
     public function Sons(){
