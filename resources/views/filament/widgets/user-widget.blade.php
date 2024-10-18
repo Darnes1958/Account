@@ -5,7 +5,7 @@
             @if($has_image2)
                 <x-filament::avatar
                     src="{{ asset('storage/'.$image2) }}" alt="description of myimage"
-                    size="w-24 h-24"
+                    size="w-12 h-12"
                 />
             @endif
 
