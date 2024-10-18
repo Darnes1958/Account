@@ -2,11 +2,18 @@
 
 namespace App\Providers;
 
+use App\Models\OurCompany;
 use BezhanSalleh\FilamentLanguageSwitch\LanguageSwitch;
 use Filament\Support\Colors\Color;
 use Filament\Support\Facades\FilamentColor;
+use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Table;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +32,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Table::$defaultNumberLocale = 'nl';
+        Gate::before(function ($user, $ability) {
+            return $user->hasRole('admin') ? true : null;
+        });
         FilamentColor::register([
             'Fuchsia' =>  Color::Fuchsia,
             'green' =>  Color::Green,
@@ -35,6 +45,14 @@ class AppServiceProvider extends ServiceProvider
             $switch
                 ->locales(['ar','en',]); // also accepts a closure
         });
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::USER_MENU_AFTER,
+            fn (): View => view('avatar',['compImage'=>OurCompany::where('company',Auth::user()->company)->first()->CompanyImg]),
+        );
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
+            fn (): string => Blade::render('@livewire(\'top-bar\')'),
+        );
         Model::unguard();
     }
 }

@@ -182,7 +182,7 @@ class KydeResource extends Resource
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-                Action::make('buytran')
+                Action::make('kydeview')
                     ->iconButton()
                     ->iconSize(IconSize::Small)
                     ->icon('heroicon-o-list-bullet')

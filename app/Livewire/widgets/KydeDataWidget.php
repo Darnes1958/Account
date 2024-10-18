@@ -2,6 +2,7 @@
 
 namespace App\Livewire\widgets;
 
+use App\Livewire\Traits\PublicTrait;
 use App\Models\KydeData;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class KydeDataWidget extends BaseWidget
 {
+    use PublicTrait;
     public function mount($kyde_id)
     {
         $this->kyde_id=$kyde_id;
@@ -33,20 +35,9 @@ class KydeDataWidget extends BaseWidget
                     ->searchable()
                     ->sortable()
                     ->label('الاسم'),
-                TextColumn::make('Account.full_name')
-                    ->searchable()
-                    ->sortable()
-                    ->label('الاسم الكامل'),
-                TextColumn::make('mden')
-                    ->state(fn(Model $record) => $record->mden==0?null:$record->mden)
-                    ->searchable()
-                    ->sortable()
-                    ->label('مدين'),
-                TextColumn::make('daen')
-                    ->state(fn(Model $record) => $record->daen==0?null:$record->daen)
-                    ->searchable()
-                    ->sortable()
-                    ->label('دائن'),
+                $this->getKydedataFormComponent('full_name'),
+                $this->getMdenFormComponent(),
+                $this->getDaenFormComponent(),
             ]);
     }
 }
