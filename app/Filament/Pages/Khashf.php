@@ -30,7 +30,7 @@ class Khashf extends Page implements HasForms,HasTable
 
     protected static string $view = 'filament.pages.khashf';
     protected ?string $heading='';
-    protected static ?string $navigationGroup='تفارير';
+
     protected static ?string $navigationLabel='كشف حساب';
 
     public $account_id;

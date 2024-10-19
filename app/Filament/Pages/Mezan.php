@@ -32,7 +32,7 @@ class Mezan extends Page implements HasForms,HasTable
 
     protected static string $view = 'filament.pages.mezan';
     protected static ?string $navigationLabel='ميزان المراجعة';
-    protected static ?string $navigationGroup='تفارير';
+
 
     protected ?string $heading='';
     public $acc_level=1;
