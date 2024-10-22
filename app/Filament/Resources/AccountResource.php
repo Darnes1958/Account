@@ -43,6 +43,11 @@ class AccountResource extends Resource
                          ->disabled(fn($operation): bool=>$operation=='edit')
                          ->live()
                          ->inline()
+                         ->afterStateHydrated(function (Radio $component, string $state,Set $set) {
+                             $last=Account::orderby('created_at','desc')->first();
+                             if ($last)
+                                 $set('acc_level',$last->acc_level);
+                         })
                          ->afterStateUpdated(function (Set $set,$state,Get $get){
                              $set('grand_id', null);
                              $set('father_id', null);
@@ -161,7 +166,7 @@ class AccountResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            
+
             ->columns([
                 TextColumn::make('id')
                  ->searchable()
@@ -173,15 +178,12 @@ class AccountResource extends Resource
                     ->sortable()
                     ->label('الاسم'),
                 TextColumn::make('full_name')
-                    ->searchable()
-                    ->sortable()
                     ->label('الاسم الكامل'),
                 TextColumn::make('acc_level')
                     ->searchable()
                     ->sortable()
                     ->badge()
                     ->label('المستوي'),
-
             ])
             ->filters([
                 //

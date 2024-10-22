@@ -21,6 +21,7 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Model;
 
 class Khashf extends Page implements HasForms,HasTable
 {
@@ -30,6 +31,8 @@ class Khashf extends Page implements HasForms,HasTable
 
     protected static string $view = 'filament.pages.khashf';
     protected ?string $heading='';
+    protected static ?string $model = KydeData::class;
+
 
     protected static ?string $navigationLabel='كشف حساب';
 
@@ -46,21 +49,24 @@ class Khashf extends Page implements HasForms,HasTable
                 ->options(function (){
                     return Account::where('acc_level','<=',$this->acc_level)->pluck('name', 'id') ;
                 })
-                ->live(),
-               $this->getAcc_levelFromComponent(),
+                ->live()
+                ->columnSpan(2),
+               $this->getAcc_levelFromComponent()->columnSpan(2),
             ])
-            ->columns(4);
+            ->columns(6);
     }
 
     public function table(Table $table): Table
     {
         return $table
-            ->query(function (){
-                if (!$this->account_id) return KydeData::where('account_id', $this->account_id);
-                return KydeData::where('account_id', $this->account_id)
+            ->query(function (KydeData $kydeData) {
+                if (!$this->account_id) $kydeData=KydeData::where('account_id', $this->account_id);
+                else
+                $kydeData=KydeData::where('account_id', $this->account_id)
                     ->orwhereIn('account_id', Account::where('grand_id',$this->account_id)->select('id'))
                     ->orwhereIn('account_id', Account::where('father_id',$this->account_id)->select('id'))
                     ->orwhereIn('account_id', Account::where('son_id',$this->account_id)->select('id'));
+                return $kydeData;
 
             }
             )
@@ -69,30 +75,12 @@ class Khashf extends Page implements HasForms,HasTable
             ->columns([
                 $this->getKydedataFormComponent('kyde_id'),
                 $this->getKydedataFormComponent('kyde_date'),
-                $this->getKydedataFormComponent('notes')
-                 ->action(
-                     Action::make('kydeview')
-                         ->iconButton()
-                         ->iconSize(IconSize::Small)
-                         ->icon('heroicon-o-list-bullet')
-                         ->color('success')
-                         ->modalHeading(false)
-                         ->modalSubmitAction(false)
-                         ->modalCancelAction(fn (StaticAction $action) => $action->label('عودة'))
-                         ->modalContent(fn (KydeData $record): View => view(
-                             'view-kyde-data-widget',
-                             ['kyde_id' => $record->kyde_id],
-                         )),
-                 ),
+                $this->getKydedataFormComponent('notes'),
                 $this->getKydedataFormComponent('account_id'),
                 $this->getKydedataFormComponent('full_name'),
                 $this->getMdenFormComponent(),
                 $this->getDaenFormComponent(),
-
-
-
-
-
             ]);
+
     }
 }
