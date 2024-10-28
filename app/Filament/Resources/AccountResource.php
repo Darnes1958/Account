@@ -195,7 +195,7 @@ class AccountResource extends Resource
             Tables\Actions\Action::make('del')
                  ->icon('heroicon-o-trash')
                  ->visible(function (Model $record){
-
+                     if ($record->is_fixed) {return false;}
                      if (KydeData::where('account_id',$record->id)->exists()) {return false;}
                      if ($record->has('Grands')) {
                          foreach ($record->Grands as $grand) {
