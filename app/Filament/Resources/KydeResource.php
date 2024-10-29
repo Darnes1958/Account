@@ -21,6 +21,7 @@ use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -166,22 +167,40 @@ class KydeResource extends Resource
                     ->sortable()
                     ->label('البيان'),
                 TextColumn::make('tot_mden')
-                    ->searchable()
-                    ->sortable()
+
+
                     ->label('مدين'),
                 TextColumn::make('tot_daen')
-                    ->searchable()
-                    ->sortable()
+
                     ->label('دائن'),
 
 
             ])
             ->filters([
-                //
+                Filter::make('anyfilter')
+                    ->form([
+                        DatePicker::make('date1')
+                            ->prefix('من تاريخ')
+                            ->hiddenLabel(),
+                        DatePicker::make('date2')
+                            ->prefix('إلي تاريخ')
+                            ->hiddenLabel(),
+
+                    ])
+                    ->query(function ( $query, array $data) {
+                        return $query
+                            ->when($data['date1'],
+                                fn ( $query, $date) => $query->where('kyde_date','>=',$data['date1']))
+                            ->when($data['date2'],
+                                fn ( $query, $date) => $query->where('kyde_date','<=',$data['date2']),
+
+                            );
+                    })
+                    ,
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\EditAction::make()->hidden(fn($record): bool => $record->kydeable_id!=null),
+                Tables\Actions\DeleteAction::make()->hidden(fn($record): bool => $record->kydeable_id!=null),
                 Action::make('kydeview')
                     ->iconButton()
                     ->iconSize(IconSize::Small)
