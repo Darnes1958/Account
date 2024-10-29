@@ -46,7 +46,7 @@ class AccountResource extends Resource
                          ->afterStateHydrated(function (Radio $component, string $state,Set $set) {
                              $last=Account::orderby('created_at','desc')->first();
                              if ($last)
-                                 $set('acc_level',$last->acc_level);
+                                 $set('acc_level',$last->acc_level->value);
                          })
                          ->afterStateUpdated(function (Set $set,$state,Get $get){
                              $set('grand_id', null);
